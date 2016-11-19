@@ -6,6 +6,8 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
+import io.netty.handler.logging.LogLevel;
+import io.netty.handler.logging.LoggingHandler;
 
 public class Main {
 
@@ -15,16 +17,14 @@ public class Main {
 		EventLoopGroup workerGroup=new NioEventLoopGroup();
 		try {
 			ServerBootstrap b=new ServerBootstrap();
-			b.group(bossGroup, workerGroup).channel(NioServerSocketChannel.class).childHandler(new ChannelInitializer<SocketChannel>() {
-				public void initChannel(SocketChannel ch){
-					ChannelPipeline p=ch.pipeline();
-					p.addLast(new DiscardServerHandler());
-				}
-			});
+			b.group(bossGroup, workerGroup)
+			.channel(NioServerSocketChannel.class).handler(new LoggingHandler(LogLevel.INFO))
+			.childHandler(new ServerInitializer());
 			
 			ChannelFuture f;
 			f = b.bind(8888).sync();
 			f.channel().closeFuture().sync();
+			
 		} catch (InterruptedException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
