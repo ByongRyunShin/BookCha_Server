@@ -1,5 +1,3 @@
-package Security;
-
 import javax.crypto.Cipher;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
@@ -7,9 +5,6 @@ import javax.crypto.spec.SecretKeySpec;
 import sun.misc.BASE64Decoder;
 import sun.misc.BASE64Encoder;
 
-/**
- * Created by user on 2016-02-03.
- */
 public class AES {
 	public static String key = "04250928";
 

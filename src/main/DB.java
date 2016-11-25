@@ -1,5 +1,3 @@
-
-
 import java.sql.Connection;
 import java.sql.Date;
 import java.sql.DriverManager;
@@ -26,7 +24,6 @@ public class DB {
 			e.printStackTrace();
 		}
 	}
-	//시연해야되는 서버라서 사용 자제 부탁드립니다.
 	static String getDate() {
 		long time = System.currentTimeMillis(); 
         SimpleDateFormat f = new SimpleDateFormat("yyyy/MM/dd");
