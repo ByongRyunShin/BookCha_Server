@@ -9,6 +9,9 @@ public class ProcessClass {
 		String Msg[] = request.split(" ");
 		
 		switch(Msg[0]){
+		case "GETSUMMARY":
+			pt.getBookSummary(Msg, ctx);
+			break;
 		case "BOOKRANKALL":
 			try {
 				pt.selectBookRankingAll(Msg, ctx);
@@ -18,18 +21,9 @@ public class ProcessClass {
 			}
 			
 			break;
-		case "MYREADLIST":
+		case "MYREADBOOK":
 			try {
 				pt.selectReadListById(Msg, ctx);
-			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			
-			break;
-		case "RECOMMENDLIST":
-			try {
-				pt.selectRecommendListById(Msg, ctx);
 			} catch (InterruptedException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -42,7 +36,30 @@ public class ProcessClass {
 		case "REGISTER":
 			pt.Register(Msg, ctx);
 			break;
+		case "BOOKCHECKALL":
+			try {
+				pt.CheckAllBook(Msg, ctx);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			break;
+		case "EACHRANKALL":
+			try {
+				pt.EachRankAll(Msg, ctx);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			break;
+		case "COUNTMEMBER":
+			pt.CountMember(Msg, ctx);
+			break;
+		case "READ":
+			pt.readCheck(Msg, ctx);
+			break;
 		default:
+			
 			break;
 				
 		}

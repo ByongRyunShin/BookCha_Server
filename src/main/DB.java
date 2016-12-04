@@ -26,39 +26,31 @@ public class DB {
 	}
 	static String getDate() {
 		long time = System.currentTimeMillis(); 
-        SimpleDateFormat f = new SimpleDateFormat("yyyy/MM/dd");
+        SimpleDateFormat f = new SimpleDateFormat("yyyy-MM-dd");
         return f.format(new Date(time));
+	}
+	
+	public synchronized String getBookSummary(String Msg[], ChannelHandlerContext sc){
+		String query=null;
+		try {
+			ResultSet rs=stmt.executeQuery("SELECT summary_title, summary from bookcha.book where book.ISBN="+Msg[1]+";");
+			while(rs.next()){
+				query=rs.getString("summary_title")+rs.getString("summary");
+			}
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return query;
 	}
 	public synchronized ArrayList<String> selectbookrankingall(String Msg[], ChannelHandlerContext sc){
 		ArrayList<String> query = new ArrayList<String>();
-		ArrayList<String> isbnlist = new ArrayList<String>();
-		int[] cnt;
 		ResultSet rs;
-		int c=0;
-		
 		try {
-			rs=stmt.executeQuery("select ISBN, book.name, author, publisher, genre.name, country.name from bookcha.book, bookcha.genre, bookcha.country where genre_id = genre.id and country_id = country.id;");
+			rs=stmt.executeQuery("select book.name, ISBN, book.author, genre.name, country.name, (select count(*) from bookcha.readinglist where bookcha.book.ISBN = bookcha.readinglist.book_isbn) as cnt from bookcha.book, bookcha.genre, bookcha.country where genre_id = genre.id and country_id = country.id order by cnt desc;");
 			while(rs.next()){
-				isbnlist.add(rs.getString(1));
-				query.add(rs.getString(1)+" "+rs.getString(2)+" "+rs.getString(3)+" "+rs.getString(4)+" "+rs.getString(5)+" "+rs.getString(6));
+				query.add(rs.getString("book.name")+"\b"+rs.getString("ISBN")+"\b"+rs.getString("book.author")+"\b"+rs.getString("genre.name")+"\b"+rs.getString("country.name")+"\b"+rs.getString("cnt"));
 			}
-			
-			cnt=new int[query.size()];
-			
-			rs=stmt.executeQuery("SELECT * FROM bookcha.readinglist;");
-			while(rs.next()){
-				String isn=rs.getString(3);
-				for(int i=0; i<query.size(); i++){
-					if(isbnlist.get(i).equals(isn)){
-						cnt[i]++;
-					}
-				}
-			}
-			
-			for(int i=0; i<query.size(); i++){
-				query.get(i).concat(" "+String.valueOf(cnt[i]));
-			}
-			query.add("end");	
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -68,28 +60,28 @@ public class DB {
 	
 	public synchronized ArrayList<String> selectReadListById(String Msg[], ChannelHandlerContext sc){
 		ArrayList<String> query = new ArrayList<String>();
-		
+		ResultSet rs;
 		try {
-			ResultSet rs=stmt.executeQuery("select ISBN, book.name, book.author, book.publisher, genre.name, country.name from bookcha.readinglist, bookcha.book, bookcha.member, bookcha.genre, bookcha.country where bookcha.readinglist.book_isbn=bookcha.book.ISBN and bookcha.readinglist.mem_id='"+Msg[1]+"' and bookcha.readinglist.mem_id = bookcha.member.clientid and bookcha.book.genre_id=bookcha.genre.id and bookcha.book.country_id=bookcha.country.id;");
+			rs=stmt.executeQuery("select book.name, ISBN, book.author, genre.name, country.name, (select count(*) from bookcha.readinglist where bookcha.book.ISBN = bookcha.readinglist.book_isbn) as cnt from bookcha.readinglist, bookcha.book, bookcha.member, bookcha.genre, bookcha.country where bookcha.readinglist.book_isbn=bookcha.book.ISBN and bookcha.readinglist.mem_id='"+Msg[1]+"' and bookcha.readinglist.mem_id = bookcha.member.clientid and bookcha.book.genre_id=bookcha.genre.id and bookcha.book.country_id=bookcha.country.id order by cnt desc;");
 			while(rs.next()){
-				query.add(rs.getString(1)+" "+rs.getString(2)+" "+rs.getString(3)+" "+rs.getString(4)+" "+rs.getString(5)+" "+rs.getString(6));
+				query.add(rs.getString("book.name")+"\b"+rs.getString("ISBN")+"\b"+rs.getString("book.author")+"\b"+rs.getString("genre.name")+"\b"+rs.getString("country.name")+"\b"+rs.getString("cnt"));
 			}
-			query.add("end");
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		}		
+		}
 		return query;
 	}
 	
 	public synchronized ArrayList<String> selectRecommendList(String Msg[], ChannelHandlerContext sc){
+		
 		ArrayList<String> query = new ArrayList<String>();
+		ResultSet rs;
 		try {
-			ResultSet rs=stmt.executeQuery("select mem_id, bookcha.book.name, ISBN, bookcha.member.name, count(*) from bookcha.readinglist, bookcha.book, bookcha.member where bookcha.readinglist.mem_id in (select distinct mem_id from bookcha.readinglist, bookcha.book, bookcha.member where bookcha.readinglist.book_isbn in (select ISBN from bookcha.readinglist, bookcha.book, bookcha.member where bookcha.readinglist.mem_id='"+Msg[1]+"' and bookcha.readinglist.mem_id=bookcha.member.clientid and bookcha.readinglist.book_isbn=bookcha.book.ISBN) and bookcha.readinglist.mem_id=member.clientid and bookcha.readinglist.book_isbn=bookcha.book.ISBN) and bookcha.readinglist.book_isbn=bookcha.book.ISBN and bookcha.readinglist.mem_id=bookcha.member.clientid group by ISBN order by count(*) desc;");
+			rs=stmt.executeQuery("select bookcha.book.name, ISBN, book.author, genre.name, country.name, count(*) from bookcha.readinglist, bookcha.book, bookcha.genre, bookcha.country, bookcha.member where bookcha.book.genre_id=bookcha.genre.id and bookcha.book.country_id=bookcha.country.id and bookcha.readinglist.mem_id in (select distinct mem_id from bookcha.readinglist, bookcha.book, bookcha.member where bookcha.readinglist.book_isbn in (select ISBN from bookcha.readinglist, bookcha.book, bookcha.member where bookcha.readinglist.mem_id='"+Msg[1]+"' and bookcha.readinglist.mem_id=bookcha.member.clientid and bookcha.readinglist.book_isbn=bookcha.book.ISBN) and bookcha.readinglist.mem_id=member.clientid and bookcha.readinglist.book_isbn=bookcha.book.ISBN) and bookcha.readinglist.book_isbn=bookcha.book.ISBN and bookcha.readinglist.mem_id=bookcha.member.clientid group by ISBN having count(*)>2 order by count(*) desc;");
 			while(rs.next()){
-				query.add(rs.getString(1)+" "+rs.getString(2)+" "+rs.getString(3)+" "+rs.getString(5));
+				query.add(rs.getString("book.name")+"\b"+rs.getString("ISBN")+"\b"+rs.getString("book.author")+"\b"+rs.getString("genre.name")+"\b"+rs.getString("country.name")+"\b"+rs.getString("count(*)"));
 			}
-			query.add("end");
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -148,6 +140,53 @@ public class DB {
 			}
 		}
 		
+		return ans;
+	}
+	public synchronized ArrayList<String> CheckAllBook(String Msg[], ChannelHandlerContext sc){
+		ArrayList<String> query=new ArrayList<String>();
+		ResultSet rs;
+		try {
+			rs=stmt.executeQuery("SELECT book.name, ISBN, genre.name, country.name, (select count(*) from bookcha.readinglist where bookcha.book.ISBN = bookcha.readinglist.book_isbn) as cnt FROM bookcha.book, bookcha.genre, bookcha.country where bookcha.book.ISBN not in (SELECT book_isbn FROM bookcha.readinglist where mem_id='"+Msg[1]+"') and bookcha.book.genre_id=bookcha.genre.id and bookcha.book.country_id=bookcha.country.id order by cnt desc;");
+			while(rs.next()){
+				query.add(rs.getString("book.name")+"\b"+rs.getString("ISBN")+"\b"+rs.getString("genre.name")+"\b"+rs.getString("country.name")+"\b"+rs.getString("cnt"));
+			}
+			
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return query;
+	}
+	public synchronized String CountMember(String Msg[], ChannelHandlerContext sc){
+		String ans=null;
+		try {
+			ResultSet rs=stmt.executeQuery("SELECT count(*) FROM bookcha.member;");
+			while(rs.next()){
+				ans=rs.getString("count(*)");
+			}
+	
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return ans;
+	}
+	public synchronized String readCheck(String Msg[], ChannelHandlerContext sc){
+		String ans=null;
+		ResultSet rs;
+		int cnt=0;
+		try {
+			rs=stmt.executeQuery("SELECT count(*) FROM bookcha.readinglist;");
+			while(rs.next()){
+				cnt=rs.getInt("count(*)");
+			}
+			stmt.execute("INSERT INTO `bookcha`.`readinglist` (`id`, `mem_id`, `book_isbn`, `readDate`) VALUES ('"+(cnt+1)+"', '"+Msg[1]+"', '"+Msg[2]+"', '"+getDate()+"');");
+			ans="Complete";
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			ans="Fail";
+		}
 		return ans;
 	}
 }
