@@ -9,7 +9,7 @@ public class AES {
 	public static String key = "04250928";
 
 	
-	public static String Encrypt(String text, String key) throws Exception
+	public static String Encrypt(String text) throws Exception
 	{
 		Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
 		byte[] keyBytes = new byte[16];
@@ -27,7 +27,7 @@ public class AES {
 		return encoder.encode(results);
 	}
 	
-	public static String Decrypt(String text, String key) throws Exception
+	public static String Decrypt(String text) throws Exception
 	{
 		Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
 		byte[] keyBytes = new byte[16];

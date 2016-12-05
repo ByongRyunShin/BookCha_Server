@@ -97,11 +97,16 @@ public class DB {
 				id++;
 			}
 			rs.close();
+			AES aes = new AES();
+			Msg[2]=aes.Encrypt(Msg[2]);
 			rs=stmt.executeQuery("SELECT * FROM bookcha.member where password = '"+Msg[2]+"';");
 			while(rs.next()){
 				pw++;
 			}
 		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
@@ -131,11 +136,16 @@ public class DB {
 		else{
 			boolean result=false;
 			try {
+				AES aes=new AES();
+				Msg[2]=aes.Encrypt(Msg[2]);
 				result=stmt.execute("INSERT INTO `bookcha`.`member` (`clientid`, `name`, `password`, `gender`, `birthDate`) VALUES ('"+ id +"', '"+ name +"', '"+ pw +"', '"+ gender +"', '"+ birthDate +"');");
 				ans+="O";
 			} catch (SQLException e) {
 				// TODO Auto-generated catch block
 				ans+="E";
+				e.printStackTrace();
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}
