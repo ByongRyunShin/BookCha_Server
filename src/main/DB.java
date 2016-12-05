@@ -78,7 +78,7 @@ public class DB {
 		ArrayList<String> query = new ArrayList<String>();
 		ResultSet rs;
 		try {
-			rs=stmt.executeQuery("select bookcha.book.name, ISBN, book.author, genre.name, country.name, count(*) from bookcha.readinglist, bookcha.book, bookcha.genre, bookcha.country, bookcha.member where bookcha.book.genre_id=bookcha.genre.id and bookcha.book.country_id=bookcha.country.id and bookcha.readinglist.mem_id in (select distinct mem_id from bookcha.readinglist, bookcha.book, bookcha.member where bookcha.readinglist.book_isbn in (select ISBN from bookcha.readinglist, bookcha.book, bookcha.member where bookcha.readinglist.mem_id='"+Msg[1]+"' and bookcha.readinglist.mem_id=bookcha.member.clientid and bookcha.readinglist.book_isbn=bookcha.book.ISBN) and bookcha.readinglist.mem_id=member.clientid and bookcha.readinglist.book_isbn=bookcha.book.ISBN) and bookcha.readinglist.book_isbn=bookcha.book.ISBN and bookcha.readinglist.mem_id=bookcha.member.clientid group by ISBN having count(*)>2 order by count(*) desc;");
+			rs=stmt.executeQuery("select bookcha.book.name, ISBN, book.author, genre.name, country.name, count(*) from bookcha.readinglist, bookcha.book, bookcha.genre, bookcha.country where bookcha.book.ISBN = bookcha.readinglist.book_isbn and bookcha.book.genre_id = bookcha.genre.id and bookcha.book.country_id = bookcha.country.id and bookcha.readinglist.book_isbn not in (select book_isbn from bookcha.readinglist where bookcha.readinglist.mem_id='"+Msg[1]+"') and bookcha.readinglist.mem_id in (select distinct mem_id from bookcha.readinglist where bookcha.readinglist.book_isbn in (select book_isbn from bookcha.readinglist where bookcha.readinglist.mem_id='"+Msg[1]+"')and NOT bookcha.readinglist.mem_id='"+Msg[1]+"') group by book_isbn having count(*)>2 order by count(*) desc;");
 			while(rs.next()){
 				query.add(rs.getString("book.name")+"\b"+rs.getString("ISBN")+"\b"+rs.getString("book.author")+"\b"+rs.getString("genre.name")+"\b"+rs.getString("country.name")+"\b"+rs.getString("count(*)"));
 			}
@@ -99,7 +99,7 @@ public class DB {
 			rs.close();
 			AES aes = new AES();
 			Msg[2]=aes.Encrypt(Msg[2]);
-			rs=stmt.executeQuery("SELECT * FROM bookcha.member where password = '"+Msg[2]+"';");
+			rs=stmt.executeQuery("SELECT * FROM bookcha.member where password = '"+Msg[2]+"' and clientid = '"+Msg[1]+"';");
 			while(rs.next()){
 				pw++;
 			}
@@ -123,6 +123,7 @@ public class DB {
 		String ans="REGISTER ";
 		int c=0;
 		try {
+			AES aes = new AES();
 			ResultSet rs=stmt.executeQuery("SELECT * FROM bookcha.member where clientid = '" + Msg[1]+"'");
 			while(rs.next()){
 				c++;
@@ -131,13 +132,16 @@ public class DB {
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 		if(c!=0) ans+="X";
 		else{
 			boolean result=false;
 			try {
 				AES aes=new AES();
-				Msg[2]=aes.Encrypt(Msg[2]);
+				pw=aes.Encrypt(pw);
 				result=stmt.execute("INSERT INTO `bookcha`.`member` (`clientid`, `name`, `password`, `gender`, `birthDate`) VALUES ('"+ id +"', '"+ name +"', '"+ pw +"', '"+ gender +"', '"+ birthDate +"');");
 				ans+="O";
 			} catch (SQLException e) {
